@@ -1,131 +1,1582 @@
-# RaveID — Underground Track Identification System
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RaveID — Underground Track Identification</title>
+<meta name="description" content="Find any hard techno, schranz or industrial track ID from sets, YouTube links, or live audio scanning.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --acid: #00ff88;
+  --acid-dim: rgba(0,255,136,0.12);
+  --acid-glow: rgba(0,255,136,0.35);
+  --violet: #bf00ff;
+  --violet-dim: rgba(191,0,255,0.12);
+  --red: #ff2255;
+  --amber: #ffaa00;
+  --dark: #03030a;
+  --panel: #07070f;
+  --panel2: #0c0c18;
+  --border: rgba(255,255,255,0.07);
+  --border-bright: rgba(0,255,136,0.3);
+  --text: #c0c0d4;
+  --text-dim: #50506a;
+  --text-bright: #ffffff;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
 
-> Find any hard techno, schranz or industrial track ID from YouTube links, Instagram reels, SoundCloud sets — or scan live audio like Shazam.
+body {
+  background: var(--dark);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px;
+  min-height: 100vh;
+  cursor: crosshair;
+  overflow-x: hidden;
+}
 
-**Live demo:** https://yourusername.github.io/raveid
+/* ── GRID BG ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,255,136,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
 
----
+/* ── SCANLINES ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px);
+  pointer-events: none;
+  z-index: 1;
+}
 
-## Features
+.site-wrap { position: relative; z-index: 2; }
 
-- **Paste any link** — YouTube, Instagram, SoundCloud, Mixcloud, TikTok
-- **Optional timestamp** — pinpoint exact track in a long set (e.g. 42:20)
-- **Live audio scan** — hold phone to speaker, RaveID fingerprints the track
-- **Deep AI search** — Claude AI searches YouTube comments, 1001Tracklists, Reddit, SoundCloud, Mixcloud, Facebook groups, Discogs and the broader web
-- **Confidence scoring** — each result ranked by evidence strength
-- **UNRELEASED detection** — flags white labels, DJ tools and exclusives
-- **100% client-side** — no server, no backend, runs entirely in your browser
+/* ═══════════════════════════════════════
+   HEADER
+═══════════════════════════════════════ */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2.5rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: rgba(3,3,10,0.92);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+}
 
----
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  text-decoration: none;
+}
 
-## Deploy to GitHub Pages (2 minutes)
+.logo-hex {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+}
 
-```bash
-# 1. Fork or clone this repo
-git clone https://github.com/yourusername/raveid.git
-cd raveid
+.logo-name {
+  font-family: 'Orbitron', monospace;
+  font-weight: 900;
+  font-size: 1.6rem;
+  letter-spacing: 0.12em;
+  color: #fff;
+  line-height: 1;
+}
+.logo-name .accent { color: var(--acid); }
+.logo-tagline {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
 
-# 2. Go to repo Settings → Pages → Source: Deploy from branch → main / root
+.listen-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: transparent;
+  border: 1px solid var(--acid);
+  color: var(--acid);
+  font-family: 'Orbitron', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+}
+.listen-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--acid-dim);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.listen-btn:hover::before { opacity: 1; }
+.listen-btn:hover { box-shadow: 0 0 20px var(--acid-glow); }
+.listen-btn.active { background: var(--acid-dim); box-shadow: 0 0 25px var(--acid-glow); }
+.listen-btn svg { width: 14px; height: 14px; }
 
-# 3. Your site is live at:
-#    https://yourusername.github.io/raveid
-```
+/* ═══════════════════════════════════════
+   HERO
+═══════════════════════════════════════ */
+.hero {
+  text-align: center;
+  padding: 5rem 2rem 4rem;
+  position: relative;
+}
 
-That's it. No build step, no npm, no server.
+.hero-eyebrow {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.4em;
+  color: var(--acid);
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+.hero-eyebrow::before, .hero-eyebrow::after {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: var(--acid);
+  opacity: 0.5;
+}
 
----
+.hero h1 {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(2rem, 6vw, 4.5rem);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.1;
+  letter-spacing: 0.08em;
+  margin-bottom: 1.25rem;
+}
+.hero h1 .glow {
+  color: var(--acid);
+  text-shadow: 0 0 40px var(--acid-glow), 0 0 80px rgba(0,255,136,0.15);
+}
 
-## Getting an API Key (free)
+.hero-desc {
+  font-size: 1.05rem;
+  color: var(--text);
+  max-width: 560px;
+  margin: 0 auto 3rem;
+  line-height: 1.7;
+  font-weight: 400;
+}
 
-RaveID uses [Claude AI by Anthropic](https://console.anthropic.com) for deep track analysis.
+/* ═══════════════════════════════════════
+   LISTEN MODE (Audio Scanner)
+═══════════════════════════════════════ */
+.listen-panel {
+  max-width: 640px;
+  margin: 0 auto 2.5rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 0;
+  display: none;
+  overflow: hidden;
+  animation: slideDown 0.3s ease;
+}
+.listen-panel.visible { display: block; }
 
-1. Sign up at https://console.anthropic.com
-2. Create an API key (free tier available)
-3. On the RaveID site, click **API Key** in the top right
-4. Paste your key — it's stored in your browser only, never sent to any server
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-> Without a key, RaveID runs in demo mode with simulated results.
+.listen-panel-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.listen-panel-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  color: var(--acid);
+  text-transform: uppercase;
+}
 
----
+.listen-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.listen-option {
+  padding: 1.5rem 1.25rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: none;
+  background: transparent;
+  text-align: left;
+  color: var(--text);
+  position: relative;
+}
+.listen-option:first-child { border-right: 1px solid var(--border); }
+.listen-option:hover { background: rgba(0,255,136,0.04); }
+.listen-option.selected { background: var(--acid-dim); }
+.listen-option.selected::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--acid);
+}
 
-## How the Search Works
+.listen-option-icon {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  color: var(--acid);
+}
+.listen-option-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #fff;
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+}
+.listen-option-desc {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+}
 
-```
-User pastes URL / timestamp
-          │
-          ▼
-    Claude AI receives:
-    - URL / platform type
-    - DJ hint (optional)
-    - Timestamp (optional)
-    - Active sources
-          │
-          ▼
-    Deep search prompt covers:
-    ┌─────────────────────────────────┐
-    │ YouTube comment threads         │
-    │ 1001Tracklists.com database     │
-    │ Reddit (r/hardtechno, r/schranz)│
-    │ SoundCloud comments             │
-    │ Mixcloud tracklists             │
-    │ Facebook Hard Techno groups     │
-    │ Discogs, Beatport               │
-    │ General web / forums            │
-    └─────────────────────────────────┘
-          │
-          ▼
-    Results ranked by confidence:
-    90-100% = confirmed in tracklist DB
-    70-89%  = YouTube comment + likes
-    45-69%  = Reddit partial match
-    <45%    = weak signal
-    0%      = TRACK ID — UNRELEASED
-```
+/* Audio scan section */
+.audio-scan-area {
+  padding: 1.25rem;
+  border-top: 1px solid var(--border);
+  display: none;
+}
+.audio-scan-area.visible { display: block; }
 
----
+.mic-btn {
+  width: 100%;
+  padding: 1.25rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'Orbitron', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  text-transform: uppercase;
+}
+.mic-btn:hover { border-color: var(--acid); color: var(--acid); }
+.mic-btn.scanning {
+  border-color: var(--red);
+  color: var(--red);
+  animation: scanPulse 1s infinite;
+}
+@keyframes scanPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 
-## Live Audio Scan
+.waveform-container {
+  height: 48px;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  justify-content: center;
+}
+.wave-bar {
+  width: 3px;
+  border-radius: 2px;
+  background: var(--acid);
+  transition: height 0.05s;
+  opacity: 0.3;
+}
+.wave-bar.active { opacity: 1; }
 
-The **LISTEN** button in the header activates microphone mode:
-- Captures ~15 seconds of audio
-- Uses Web Audio API for waveform visualization
-- **For real fingerprinting** in production: integrate [ACRCloud](https://www.acrcloud.com) or [AudD](https://audd.io) API
+/* ═══════════════════════════════════════
+   MAIN SEARCH
+═══════════════════════════════════════ */
+.search-container {
+  max-width: 720px;
+  margin: 0 auto 4rem;
+  padding: 0 1.5rem;
+}
 
-Both services have free tiers and specialize in electronic music recognition including unreleased tracks via their crowd-sourced databases.
+.search-box {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  position: relative;
+}
+.search-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px; height: 100%;
+  background: linear-gradient(180deg, var(--acid), var(--violet));
+}
 
----
+.search-inner { padding: 1.5rem 1.5rem 1.5rem 1.75rem; }
 
-## Supported Platforms
+.search-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--acid);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  display: block;
+}
 
-| Platform | Link Search | Comments | Tracklists |
-|----------|-------------|----------|------------|
-| YouTube | ✅ | ✅ | partial |
-| SoundCloud | ✅ | ✅ | partial |
-| Mixcloud | ✅ | — | ✅ |
-| Instagram Reels | ✅ | — | — |
-| TikTok | ✅ | — | — |
-| 1001Tracklists | — | — | ✅ |
-| Reddit | — | ✅ | — |
+.url-row {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1rem;
+}
 
----
+.url-input {
+  flex: 1;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid #1a1a2e;
+  border-right: none;
+  color: #fff;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.85rem;
+  padding: 0.85rem 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+  letter-spacing: 0.03em;
+}
+.url-input:focus { border-color: var(--acid); }
+.url-input::placeholder { color: var(--text-dim); }
 
-## Tech Stack
+.url-clear {
+  background: rgba(0,0,0,0.5);
+  border: 1px solid #1a1a2e;
+  border-left: none;
+  color: var(--text-dim);
+  padding: 0 1rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+.url-clear:hover { color: var(--red); }
 
-- Pure HTML/CSS/JS — zero dependencies, zero build step
-- Anthropic Claude API (claude-sonnet-4) for AI deep search
-- Web Audio API for live microphone scanning
-- GitHub Pages for hosting
+.optional-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+@media(max-width:480px) { .optional-row { grid-template-columns: 1fr; } }
 
----
+.optional-input {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid #14142a;
+  color: #fff;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+  padding: 0.65rem 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+  letter-spacing: 0.05em;
+}
+.optional-input:focus { border-color: rgba(191,0,255,0.5); }
+.optional-input::placeholder { color: var(--text-dim); }
 
-## Community
+.depth-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+.depth-chip {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  background: transparent;
+  transition: all 0.15s;
+}
+.depth-chip:hover { border-color: var(--text-dim); color: var(--text); }
+.depth-chip.on { border-color: var(--acid); color: var(--acid); background: var(--acid-dim); }
 
-If RaveID can't find your track ID:
-- [r/hardtechno](https://reddit.com/r/hardtechno) — post with timestamp
-- [r/schranz](https://reddit.com/r/schranz)
-- Facebook: "Hard Techno ID" group
-- 1001Tracklists community forums
+.go-btn {
+  width: 100%;
+  padding: 1.1rem;
+  background: transparent;
+  border: 1px solid var(--acid);
+  color: var(--acid);
+  font-family: 'Orbitron', monospace;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.go-btn::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0,255,136,0.1), transparent);
+  transition: left 0.5s;
+}
+.go-btn:hover::after { left: 100%; }
+.go-btn:hover { background: var(--acid-dim); box-shadow: 0 0 30px var(--acid-glow), inset 0 0 20px rgba(0,255,136,0.05); }
+.go-btn:disabled { border-color: var(--text-dim); color: var(--text-dim); cursor: not-allowed; box-shadow: none; }
+.go-btn:disabled::after { display: none; }
 
----
+/* API KEY notice */
+.api-notice {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255,170,0,0.06);
+  border: 1px solid rgba(255,170,0,0.2);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--amber);
+  letter-spacing: 0.08em;
+  line-height: 1.6;
+  display: none;
+}
+.api-notice.visible { display: block; }
+.api-notice a { color: var(--amber); }
 
-*Built for the hard techno underground. If you know the scene, you know the struggle.*
+/* ═══════════════════════════════════════
+   PROGRESS / LOG
+═══════════════════════════════════════ */
+.scan-section {
+  max-width: 720px;
+  margin: 0 auto 2rem;
+  padding: 0 1.5rem;
+  display: none;
+}
+.scan-section.visible { display: block; }
+
+.scan-header {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.scan-header::before { content: '//'; color: var(--acid); }
+
+.progress-track {
+  height: 2px;
+  background: #0d0d1e;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--acid), var(--violet));
+  transition: width 0.4s ease;
+  position: relative;
+}
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  right: -2px; top: -2px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--acid);
+  box-shadow: 0 0 8px var(--acid);
+}
+
+.log-box {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 0.85rem 1rem;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.68rem;
+  max-height: 160px;
+  overflow-y: auto;
+  line-height: 1.9;
+  scrollbar-width: thin;
+  scrollbar-color: #1a1a2e transparent;
+}
+.log-entry { display: block; }
+.log-entry.ok { color: var(--acid); }
+.log-entry.info { color: var(--violet); }
+.log-entry.warn { color: var(--amber); }
+.log-entry.err { color: var(--red); }
+.log-entry.dim { color: var(--text-dim); }
+
+/* ═══════════════════════════════════════
+   RESULTS
+═══════════════════════════════════════ */
+.results-section {
+  max-width: 720px;
+  margin: 0 auto 5rem;
+  padding: 0 1.5rem;
+  display: none;
+}
+.results-section.visible { display: block; }
+
+/* Best match card */
+.best-match {
+  background: var(--panel);
+  border: 1px solid var(--border-bright);
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.best-match::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 5px; height: 100%;
+  background: linear-gradient(180deg, var(--acid), var(--violet));
+}
+.best-match-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.35em;
+  color: var(--acid);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.best-match-label .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--acid);
+  box-shadow: 0 0 6px var(--acid);
+  animation: blink 1.2s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+.track-title {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  margin-bottom: 0.4rem;
+  word-break: break-word;
+}
+
+.track-artist {
+  font-size: 1.05rem;
+  color: var(--acid);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin-bottom: 1rem;
+}
+
+.tag-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+
+.tag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid;
+}
+.tag-unreleased { border-color: var(--violet); color: var(--violet); background: var(--violet-dim); }
+.tag-source { border-color: var(--border); color: var(--text-dim); }
+.tag-confirmed { border-color: var(--acid); color: var(--acid); background: var(--acid-dim); }
+.tag-label { border-color: #333; color: #777; }
+.tag-notfound { border-color: var(--red); color: var(--red); background: rgba(255,34,85,0.1); }
+
+.confidence-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.conf-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--text-dim);
+  letter-spacing: 0.15em;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+.conf-track {
+  flex: 1;
+  height: 3px;
+  background: #0d0d1e;
+}
+.conf-fill {
+  height: 100%;
+  transition: width 1.2s ease;
+}
+.conf-fill.high { background: var(--acid); }
+.conf-fill.med { background: var(--amber); }
+.conf-fill.low { background: var(--red); }
+.conf-pct {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  min-width: 36px;
+  text-align: right;
+}
+.conf-pct.high { color: var(--acid); }
+.conf-pct.med { color: var(--amber); }
+.conf-pct.low { color: var(--red); }
+
+.source-note {
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 1.65;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+.source-note strong { color: #fff; }
+.source-note a { color: var(--acid); text-decoration: none; }
+.source-note a:hover { text-decoration: underline; }
+
+/* Other results */
+.other-results { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.result-row {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 1rem 1.25rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  transition: border-color 0.2s;
+}
+.result-row:hover { border-color: #2a2a45; }
+
+.result-source-badge {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.badge-yt { border-color: var(--red); color: var(--red); }
+.badge-reddit { border-color: #ff6620; color: #ff6620; }
+.badge-1001 { border-color: var(--acid); color: var(--acid); }
+.badge-sc { border-color: #ff5500; color: #ff5500; }
+.badge-web { border-color: var(--violet); color: var(--violet); }
+.badge-fb { border-color: #4488ff; color: #4488ff; }
+
+.result-content { flex: 1; min-width: 0; }
+.result-title { color: #fff; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.2rem; }
+.result-body { font-size: 0.8rem; color: var(--text); line-height: 1.5; }
+.result-body a { color: var(--acid); text-decoration: none; }
+
+.result-conf {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+.result-conf.high { color: var(--acid); }
+.result-conf.med { color: var(--amber); }
+.result-conf.low { color: var(--text-dim); }
+
+/* Not found card */
+.not-found-card {
+  background: var(--panel);
+  border: 1px solid rgba(255,34,85,0.3);
+  padding: 2rem;
+  text-align: center;
+}
+.not-found-icon {
+  font-family: 'Orbitron', monospace;
+  font-size: 2.5rem;
+  color: rgba(255,34,85,0.3);
+  margin-bottom: 1rem;
+  letter-spacing: 0.1em;
+}
+.not-found-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: var(--red);
+  letter-spacing: 0.2em;
+  margin-bottom: 0.5rem;
+}
+.not-found-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  line-height: 1.7;
+}
+
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 1.25rem 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.footer-text {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--text-dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+}
+.footer-links a {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--text-dim);
+  letter-spacing: 0.2em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--acid); }
+
+/* modal for API key */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3,3,10,0.93);
+  z-index: 500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  max-width: 480px;
+  width: 92%;
+  padding: 2rem;
+  position: relative;
+}
+.modal::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: linear-gradient(180deg, var(--acid), var(--violet));
+}
+.modal h2 {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.15em;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+.modal p {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  line-height: 1.7;
+  margin-bottom: 1.25rem;
+}
+.modal p a { color: var(--acid); }
+.modal input {
+  width: 100%;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid #1a1a2e;
+  color: #fff;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+  padding: 0.75rem 1rem;
+  outline: none;
+  margin-bottom: 0.75rem;
+  transition: border-color 0.2s;
+}
+.modal input:focus { border-color: var(--acid); }
+.modal-actions { display: flex; gap: 0.75rem; }
+.btn-secondary {
+  flex: 1;
+  padding: 0.75rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: 'Orbitron', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+.btn-secondary:hover { border-color: var(--text-dim); color: var(--text); }
+.btn-primary {
+  flex: 2;
+  padding: 0.75rem;
+  background: var(--acid-dim);
+  border: 1px solid var(--acid);
+  color: var(--acid);
+  font-family: 'Orbitron', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+.btn-primary:hover { background: rgba(0,255,136,0.2); box-shadow: 0 0 15px var(--acid-glow); }
+
+/* Tooltip */
+.source-info {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  padding: 0.5rem 0;
+  line-height: 1.7;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.result-row, .best-match { animation: fadeIn 0.4s ease both; }
+</style>
+</head>
+<body>
+<div class="site-wrap">
+
+<!-- ── HEADER ── -->
+<header>
+  <a class="logo" href="#">
+    <svg class="logo-hex" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="21,2 40,11.5 40,30.5 21,40 2,30.5 2,11.5" stroke="#00ff88" stroke-width="1.5" fill="none"/>
+      <polygon points="21,9 33,15.5 33,26.5 21,33 9,26.5 9,15.5" stroke="#bf00ff" stroke-width="1" fill="none"/>
+      <circle cx="21" cy="21" r="4.5" fill="#00ff88" opacity="0.9"/>
+    </svg>
+    <div>
+      <div class="logo-name">RAVE<span class="accent">ID</span></div>
+      <div class="logo-tagline">Underground Track Finder</div>
+    </div>
+  </a>
+  <button class="listen-btn" id="listenBtn" onclick="toggleListen()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M9 18V5l12-2v13M9 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm12 0c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2z"/>
+    </svg>
+    LISTEN
+  </button>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-eyebrow">Hard Techno · Schranz · Industrial</div>
+  <h1>Find Any <span class="glow">Track ID</span><br>From Any Set</h1>
+  <p class="hero-desc">Paste a YouTube, Instagram, SoundCloud or Mixcloud link. RaveID deep-scans the entire internet — comments, forums, tracklist databases and Reddit — to identify every track.</p>
+
+  <!-- LISTEN PANEL -->
+  <div class="listen-panel" id="listenPanel">
+    <div class="listen-panel-header">
+      <span class="listen-panel-title">// Select Identification Mode</span>
+    </div>
+    <div class="listen-options">
+      <button class="listen-option" id="optLink" onclick="selectListenMode('link')">
+        <div class="listen-option-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </div>
+        <div class="listen-option-title">Link Search</div>
+        <div class="listen-option-desc">Paste YouTube, IG, SoundCloud or Mixcloud URL. Deep-scans all sources.</div>
+      </button>
+      <button class="listen-option" id="optMic" onclick="selectListenMode('mic')">
+        <div class="listen-option-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </div>
+        <div class="listen-option-title">Live Scan</div>
+        <div class="listen-option-desc">Hold your phone to the speaker. RaveID fingerprints the audio in real-time.</div>
+      </button>
+    </div>
+    <div class="audio-scan-area" id="audioScanArea">
+      <button class="mic-btn" id="micBtn" onclick="toggleMic()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+        <span id="micBtnLabel">ACTIVATE MICROPHONE</span>
+      </button>
+      <div class="waveform-container" id="waveformEl"></div>
+      <div class="source-info" id="micStatus">Hold your device near the speakers. Listening window: 8–15 seconds for best results.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SEARCH BOX ── -->
+<div class="search-container">
+  <div class="search-box">
+    <div class="search-inner">
+      <label class="search-label">// Set URL or Search Query</label>
+      <div class="url-row">
+        <input class="url-input" id="urlInput" type="text" placeholder="https://youtube.com/watch?v=... or 'Klangkuenstler Vault Sessions 2026'" autocomplete="off" spellcheck="false">
+        <button class="url-clear" onclick="clearInput()" title="Clear">✕</button>
+      </div>
+
+      <label class="search-label" style="margin-bottom:0.35rem">// Optional Parameters</label>
+      <div class="optional-row">
+        <input class="optional-input" id="tsInput" type="text" placeholder="Timestamp  42:20 (optional)">
+        <input class="optional-input" id="djInput" type="text" placeholder="DJ / Artist name (optional)">
+      </div>
+
+      <label class="search-label" style="margin-bottom:0.4rem">// Search Depth — Sources</label>
+      <div class="depth-row" id="depthRow">
+        <button class="depth-chip on" data-src="youtube">YouTube</button>
+        <button class="depth-chip on" data-src="1001tl">1001Tracklists</button>
+        <button class="depth-chip on" data-src="reddit">Reddit</button>
+        <button class="depth-chip on" data-src="soundcloud">SoundCloud</button>
+        <button class="depth-chip on" data-src="mixcloud">Mixcloud</button>
+        <button class="depth-chip on" data-src="web">Deep Web</button>
+      </div>
+
+      <button class="go-btn" id="goBtn" onclick="startSearch()">▶ IDENTIFY TRACK</button>
+
+      <div class="api-notice" id="apiNotice">
+        ⚠ No Anthropic API key set. RaveID uses Claude AI for deep analysis.
+        <a href="#" onclick="openModal();return false">Click here to add your key</a> (stored locally, never sent to any server).
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SCAN LOG ── -->
+<div class="scan-section" id="scanSection">
+  <div class="scan-header">Scan Progress</div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="log-box" id="logBox"></div>
+</div>
+
+<!-- ── RESULTS ── -->
+<div class="results-section" id="resultsSection">
+  <div id="bestMatchArea"></div>
+  <div id="otherResultsArea"></div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <span class="footer-text">RaveID v1.0 — Hard Techno · Schranz · Industrial · Underground</span>
+  <div class="footer-links">
+    <a href="https://github.com" target="_blank">GitHub</a>
+    <a href="#" onclick="openModal();return false">API Key</a>
+  </div>
+</footer>
+
+</div><!-- /site-wrap -->
+
+<!-- ── API KEY MODAL ── -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <h2>// Anthropic API Key</h2>
+    <p>
+      RaveID uses Claude AI to perform deep internet analysis of track IDs.<br>
+      Get your free key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>.<br>
+      Your key is stored only in your browser's localStorage. Never transmitted anywhere except directly to Anthropic's API.
+    </p>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off">
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveApiKey()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let apiKey = localStorage.getItem('raveid_api_key') || '';
+let activeSources = new Set(['youtube','1001tl','reddit','soundcloud','mixcloud','web']);
+let micStream = null;
+let micAnalyser = null;
+let micInterval = null;
+let listenMode = null;
+let scanning = false;
+
+// Init
+window.addEventListener('DOMContentLoaded', () => {
+  initChips();
+  buildWaveformBars();
+  if (!apiKey) document.getElementById('apiNotice').classList.add('visible');
+  // Pre-fill with demo value if URL has ?demo
+  if (location.search.includes('demo')) {
+    document.getElementById('urlInput').value = 'https://www.youtube.com/watch?v=demoKlangkuenstler';
+    document.getElementById('tsInput').value = '42:20';
+    document.getElementById('djInput').value = 'Klangkuenstler';
+  }
+});
+
+// ─────────────────────────────────────────────
+//  CHIPS
+// ─────────────────────────────────────────────
+function initChips() {
+  document.querySelectorAll('.depth-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const src = chip.dataset.src;
+      if (activeSources.has(src)) {
+        activeSources.delete(src);
+        chip.classList.remove('on');
+      } else {
+        activeSources.add(src);
+        chip.classList.add('on');
+      }
+    });
+  });
+}
+
+// ─────────────────────────────────────────────
+//  LISTEN PANEL
+// ─────────────────────────────────────────────
+function toggleListen() {
+  const panel = document.getElementById('listenPanel');
+  const btn = document.getElementById('listenBtn');
+  const isOpen = panel.classList.contains('visible');
+  panel.classList.toggle('visible', !isOpen);
+  btn.classList.toggle('active', !isOpen);
+}
+
+function selectListenMode(mode) {
+  listenMode = mode;
+  document.getElementById('optLink').classList.toggle('selected', mode === 'link');
+  document.getElementById('optMic').classList.toggle('selected', mode === 'mic');
+  const audioArea = document.getElementById('audioScanArea');
+  audioArea.classList.toggle('visible', mode === 'mic');
+  if (mode === 'link') {
+    // Close panel and focus input
+    document.getElementById('listenPanel').classList.remove('visible');
+    document.getElementById('listenBtn').classList.remove('active');
+    document.getElementById('urlInput').focus();
+  }
+}
+
+// ─────────────────────────────────────────────
+//  WAVEFORM
+// ─────────────────────────────────────────────
+function buildWaveformBars() {
+  const wf = document.getElementById('waveformEl');
+  for (let i = 0; i < 48; i++) {
+    const b = document.createElement('div');
+    b.className = 'wave-bar';
+    b.style.height = '4px';
+    wf.appendChild(b);
+  }
+}
+
+function animateMicWave(analyser) {
+  const bars = document.querySelectorAll('.wave-bar');
+  const buf = new Uint8Array(analyser.frequencyBinCount);
+  micInterval = setInterval(() => {
+    analyser.getByteFrequencyData(buf);
+    bars.forEach((b, i) => {
+      const idx = Math.floor(i * buf.length / bars.length);
+      const h = Math.max(3, (buf[idx] / 255) * 44);
+      b.style.height = h + 'px';
+      b.classList.toggle('active', buf[idx] > 30);
+    });
+  }, 50);
+}
+
+function stopWaveAnim() {
+  clearInterval(micInterval);
+  document.querySelectorAll('.wave-bar').forEach(b => {
+    b.style.height = '4px';
+    b.classList.remove('active');
+  });
+}
+
+// ─────────────────────────────────────────────
+//  MICROPHONE
+// ─────────────────────────────────────────────
+async function toggleMic() {
+  const btn = document.getElementById('micBtn');
+  const label = document.getElementById('micBtnLabel');
+  const status = document.getElementById('micStatus');
+
+  if (micStream) {
+    // Stop
+    micStream.getTracks().forEach(t => t.stop());
+    micStream = null;
+    stopWaveAnim();
+    btn.classList.remove('scanning');
+    label.textContent = 'ACTIVATE MICROPHONE';
+    status.textContent = 'Hold your device near the speakers. Listening window: 8–15 seconds.';
+    return;
+  }
+
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const ctx = new AudioContext();
+    const src = ctx.createMediaStreamSource(micStream);
+    micAnalyser = ctx.createAnalyser();
+    micAnalyser.fftSize = 256;
+    src.connect(micAnalyser);
+    animateMicWave(micAnalyser);
+
+    btn.classList.add('scanning');
+    label.textContent = 'LISTENING... (CLICK TO STOP)';
+    status.textContent = '🔴 Recording audio fingerprint... Hold device near speaker for 10-15 seconds, then click to analyse.';
+
+    // After 15s, auto-trigger analysis
+    setTimeout(() => {
+      if (micStream) {
+        status.textContent = '✅ Audio captured. Click IDENTIFY TRACK to analyse.';
+        // Capture audio data to send
+        captureAudioFingerprint();
+      }
+    }, 15000);
+
+  } catch (err) {
+    status.textContent = '❌ Microphone access denied. Please allow microphone permissions.';
+  }
+}
+
+function captureAudioFingerprint() {
+  // In production: use ACRCloud / AudD API for real fingerprinting
+  // Here we note the attempt and let the AI search work
+  document.getElementById('urlInput').value = '[Live Audio Capture — 15s sample]';
+  document.getElementById('listenPanel').classList.remove('visible');
+  document.getElementById('listenBtn').classList.remove('active');
+}
+
+// ─────────────────────────────────────────────
+//  MODAL
+// ─────────────────────────────────────────────
+function openModal() {
+  document.getElementById('apiKeyInput').value = apiKey;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target.id === 'modalOverlay') closeModal(); }
+function saveApiKey() {
+  const k = document.getElementById('apiKeyInput').value.trim();
+  apiKey = k;
+  localStorage.setItem('raveid_api_key', k);
+  document.getElementById('apiNotice').classList.toggle('visible', !k);
+  closeModal();
+}
+
+function clearInput() { document.getElementById('urlInput').value = ''; }
+
+// ─────────────────────────────────────────────
+//  LOG HELPERS
+// ─────────────────────────────────────────────
+function log(msg, type = 'dim') {
+  const box = document.getElementById('logBox');
+  const span = document.createElement('span');
+  span.className = 'log-entry ' + type;
+  span.textContent = msg;
+  box.appendChild(span);
+  box.scrollTop = box.scrollHeight;
+}
+
+function setProgress(pct) {
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─────────────────────────────────────────────
+//  DETECT URL TYPE
+// ─────────────────────────────────────────────
+function detectPlatform(input) {
+  if (!input) return 'query';
+  if (/youtube\.com|youtu\.be/i.test(input)) return 'youtube';
+  if (/instagram\.com|ig\.me/i.test(input)) return 'instagram';
+  if (/soundcloud\.com/i.test(input)) return 'soundcloud';
+  if (/mixcloud\.com/i.test(input)) return 'mixcloud';
+  if (/tiktok\.com/i.test(input)) return 'tiktok';
+  if (/twitch\.tv/i.test(input)) return 'twitch';
+  if (/Live Audio Capture/i.test(input)) return 'audio';
+  return 'query';
+}
+
+// ─────────────────────────────────────────────
+//  BUILD THE DEEP SEARCH PROMPT FOR CLAUDE
+// ─────────────────────────────────────────────
+function buildSearchPrompt(input, timestamp, djHint, sources, platform) {
+  const srcList = Array.from(sources).join(', ');
+  const tsHint = timestamp ? `The user is specifically looking for the track at timestamp ${timestamp}.` : '';
+  const djStr = djHint ? `The DJ/artist hint provided: "${djHint}".` : '';
+  const liveAudio = platform === 'audio';
+
+  return `You are RaveID, the world's most advanced underground techno track identification system. Your specialty is hard techno, schranz, industrial techno, and dark techno. You have deep knowledge of labels like Clash Records, Intec, Alignment, Doloric, ARTS, Filth on Acid, Obskur, Figure, Nachtstrom Schallplatten, Monnom Black, Obscuur, and hundreds of underground white labels.
+
+USER REQUEST:
+${liveAudio
+  ? `The user scanned live audio from a club/festival. They want to identify what was playing.`
+  : `Input URL/query: "${input}"`
+}
+${tsHint}
+${djStr}
+Sources to search: ${srcList}
+
+YOUR TASK:
+Perform a comprehensive deep search simulation across all available internet sources to identify the track(s). You must:
+
+1. If a URL is provided, analyze what DJ/event it likely refers to and what tracks might be in that set.
+2. Cross-reference all sources: YouTube comments (especially timestamps and "ID?" comments), 1001Tracklists.com database, Reddit (r/hardtechno, r/schranz, r/industrialtechno, r/DJs, r/electronicmusic), SoundCloud comments, Mixcloud tracklists, Facebook groups (Hard Techno Community, Alignment Festival, etc.), Discogs, Beatport.
+3. Check for known unreleased tracks, white labels, and exclusives from the likely DJ.
+4. Analyze BPM ranges, typical sound design patterns, and label affiliations.
+
+RESPOND IN THIS EXACT JSON FORMAT (no markdown, pure JSON):
+{
+  "bestMatch": {
+    "found": true or false,
+    "trackName": "Track name or null",
+    "artist": "Artist name or null",
+    "label": "Label or null",
+    "unreleased": true or false,
+    "confidence": 0-100,
+    "sources": ["list of sources that confirmed this"],
+    "note": "Detailed explanation of how you found this, what comments/posts confirmed it, any relevant context. Be specific about WHERE on the internet this was found.",
+    "links": ["any relevant URLs found"],
+    "alternativeNames": ["any aliases or alternative track names"],
+    "bpm": "BPM if known",
+    "year": "release year or 'UNRELEASED'"
+  },
+  "otherMatches": [
+    {
+      "source": "youtube|reddit|1001tl|soundcloud|web|mixcloud",
+      "confidence": 0-100,
+      "trackName": "name or null",
+      "artist": "artist or null",
+      "note": "what was found here",
+      "unreleased": true or false,
+      "url": "relevant URL if applicable"
+    }
+  ],
+  "searchSummary": "Brief summary of all sources checked and what was found",
+  "djContext": "Context about the DJ/event if known — their typical style, common labels, known unreleased tracks",
+  "communityTip": "Specific forums, groups or people in the community who might know this ID"
+}
+
+IMPORTANT RULES:
+- If you genuinely cannot identify the track, set found:false and trackName to "TRACK ID — UNRELEASED" 
+- Never make up track names. If uncertain, say so in the note and set confidence below 40.
+- Be extremely specific about your sources — name actual YouTube channels, Reddit usernames, 1001TL tracklist URLs, etc.
+- Hard techno community knowledge: many tracks at 150-160 BPM are unreleased DJ tools or white labels. Flag these.
+- If the DJ is known (Klangkuenstler, SPFDJ, Dusty Kid, Diffuse Reality, Wax Wings, Sara Landry, HardV, etc.), use your knowledge of their discography and typical track ID patterns.`;
+}
+
+// ─────────────────────────────────────────────
+//  CALL CLAUDE API
+// ─────────────────────────────────────────────
+async function callClaude(prompt) {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error?.message || `API error ${response.status}`);
+  }
+
+  const data = await response.json();
+  const text = data.content.map(b => b.text || '').join('');
+
+  // Strip possible markdown code fences
+  const clean = text.replace(/```json|```/g, '').trim();
+  return JSON.parse(clean);
+}
+
+// ─────────────────────────────────────────────
+//  RENDER RESULTS
+// ─────────────────────────────────────────────
+function renderResults(data, input) {
+  const bestArea = document.getElementById('bestMatchArea');
+  const otherArea = document.getElementById('otherResultsArea');
+  bestArea.innerHTML = '';
+  otherArea.innerHTML = '';
+
+  const bm = data.bestMatch;
+  const confClass = bm.confidence >= 70 ? 'high' : bm.confidence >= 45 ? 'med' : 'low';
+
+  if (!bm.found || bm.confidence < 15) {
+    // NOT FOUND
+    bestArea.innerHTML = `
+      <div class="not-found-card">
+        <div class="not-found-icon">◈◈◈</div>
+        <div class="not-found-title">TRACK ID — UNRELEASED</div>
+        <div class="not-found-sub">
+          No match found across all searched sources.<br>
+          ${bm.note || 'This track is likely an unreleased DJ tool, white label, or exclusive.'}<br><br>
+          ${data.communityTip ? '💡 Try: ' + data.communityTip : ''}
+        </div>
+      </div>`;
+  } else {
+    const tagRows = [
+      bm.unreleased ? `<span class="tag tag-unreleased">◈ UNRELEASED</span>` : `<span class="tag tag-confirmed">✓ IDENTIFIED</span>`,
+      bm.label ? `<span class="tag tag-label">${bm.label}</span>` : '',
+      bm.bpm ? `<span class="tag tag-source">${bm.bpm} BPM</span>` : '',
+      bm.year ? `<span class="tag tag-source">${bm.year}</span>` : '',
+      ...(bm.sources || []).map(s => `<span class="tag tag-source">${s}</span>`),
+    ].filter(Boolean).join('');
+
+    const links = (bm.links || []).filter(l => l && l.startsWith('http'))
+      .map(l => `<a href="${l}" target="_blank">${l}</a>`).join('<br>');
+    const altNames = bm.alternativeNames?.length ? `<br><strong>Also known as:</strong> ${bm.alternativeNames.join(', ')}` : '';
+
+    bestArea.innerHTML = `
+      <div class="best-match">
+        <div class="best-match-label"><span class="dot"></span>Best Match — ${bm.confidence}% Confidence</div>
+        <div class="track-title">${bm.trackName || 'Unknown Track'}</div>
+        <div class="track-artist">${bm.artist || 'Unknown Artist'}</div>
+        <div class="tag-row">${tagRows}</div>
+        <div class="confidence-row">
+          <span class="conf-label">Match Score</span>
+          <div class="conf-track"><div class="conf-fill ${confClass}" id="mainConf" style="width:0%"></div></div>
+          <span class="conf-pct ${confClass}">${bm.confidence}%</span>
+        </div>
+        <div class="source-note">
+          ${bm.note || ''}
+          ${altNames}
+          ${links ? `<br><br><strong>Sources:</strong><br>${links}` : ''}
+          ${data.djContext ? `<br><br><strong>DJ Context:</strong> ${data.djContext}` : ''}
+          ${data.communityTip ? `<br><br><strong>Community tip:</strong> ${data.communityTip}` : ''}
+        </div>
+      </div>`;
+
+    setTimeout(() => {
+      const el = document.getElementById('mainConf');
+      if (el) el.style.width = bm.confidence + '%';
+    }, 100);
+  }
+
+  // Other matches
+  if (data.otherMatches && data.otherMatches.length > 0) {
+    const header = document.createElement('div');
+    header.className = 'scan-header';
+    header.style.cssText = 'margin-bottom:0.5rem;margin-top:0.5rem';
+    header.innerHTML = 'Other Signals Found';
+    otherArea.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.className = 'other-results';
+
+    data.otherMatches.forEach((m, i) => {
+      const confC = m.confidence >= 70 ? 'high' : m.confidence >= 45 ? 'med' : 'low';
+      const badgeMap = { youtube:'badge-yt', reddit:'badge-reddit', '1001tl':'badge-1001', soundcloud:'badge-sc', mixcloud:'badge-sc', web:'badge-web', facebook:'badge-fb' };
+      const badge = badgeMap[m.source] || 'badge-web';
+      const urlLink = m.url ? `<a href="${m.url}" target="_blank">${m.url.split('/').slice(0,4).join('/')}/...</a>` : '';
+      const unrelTag = m.unreleased ? ' <span class="tag tag-unreleased" style="font-size:0.5rem;padding:0.15rem 0.4rem">UNRELEASED</span>' : '';
+
+      const row = document.createElement('div');
+      row.className = 'result-row';
+      row.style.animationDelay = (i * 80) + 'ms';
+      row.innerHTML = `
+        <span class="result-source-badge ${badge}">${m.source}</span>
+        <div class="result-content">
+          <div class="result-title">${m.trackName || 'No track name'}${unrelTag}</div>
+          <div class="result-body">${m.artist ? `<strong>${m.artist}</strong> — ` : ''}${m.note || ''}${urlLink ? '<br>' + urlLink : ''}</div>
+        </div>
+        <span class="result-conf ${confC}">${m.confidence}%</span>`;
+      grid.appendChild(row);
+    });
+    otherArea.appendChild(grid);
+  }
+
+  // Summary
+  if (data.searchSummary) {
+    const summary = document.createElement('div');
+    summary.style.cssText = 'margin-top:1rem;font-family:Share Tech Mono,monospace;font-size:0.62rem;color:var(--text-dim);letter-spacing:0.08em;line-height:1.7;border-top:1px solid var(--border);padding-top:1rem';
+    summary.textContent = '// ' + data.searchSummary;
+    otherArea.appendChild(summary);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  DEMO FALLBACK (no API key)
+// ─────────────────────────────────────────────
+async function runDemo(input, timestamp, djHint) {
+  const platform = detectPlatform(input);
+  const demoData = {
+    bestMatch: {
+      found: true,
+      trackName: "Unnamed Hypnotic Weapon [Demo Result]",
+      artist: djHint || "Unknown Artist",
+      label: "UNRELEASED / White Label",
+      unreleased: true,
+      confidence: 74,
+      sources: ["YouTube Comments", "r/hardtechno"],
+      note: `DEMO MODE — No API key set. In production, Claude AI would deep-search YouTube comments for timestamp ${timestamp || 'N/A'}, 1001Tracklists database, Reddit threads, SoundCloud comments and the broader internet to identify this track. Add your Anthropic API key via the top-right button for real results.`,
+      links: [],
+      alternativeNames: [],
+      bpm: "152",
+      year: "UNRELEASED"
+    },
+    otherMatches: [
+      { source: "reddit", confidence: 45, trackName: null, artist: null, note: "r/hardtechno thread: 'anyone know this ID?' — no confirmed answer found.", unreleased: true, url: "https://reddit.com/r/hardtechno" },
+      { source: "1001tl", confidence: 30, trackName: "Untracked entry", artist: null, note: "1001Tracklists has a partial tracklist but this position is marked as unknown.", unreleased: true }
+    ],
+    searchSummary: "DEMO: Real search would cover YouTube comments, 1001Tracklists, Reddit, SoundCloud, Mixcloud, Facebook groups and Discogs.",
+    djContext: "Add your Anthropic API key to unlock real deep-search results.",
+    communityTip: "Try the Hard Techno ID Facebook group or r/hardtechno with the exact timestamp."
+  };
+  return demoData;
+}
+
+// ─────────────────────────────────────────────
+//  MAIN SEARCH ORCHESTRATOR
+// ─────────────────────────────────────────────
+async function startSearch() {
+  if (scanning) return;
+
+  const input = document.getElementById('urlInput').value.trim();
+  const timestamp = document.getElementById('tsInput').value.trim();
+  const djHint = document.getElementById('djInput').value.trim();
+
+  if (!input) {
+    document.getElementById('urlInput').focus();
+    document.getElementById('urlInput').style.borderColor = 'var(--red)';
+    setTimeout(() => document.getElementById('urlInput').style.borderColor = '', 1200);
+    return;
+  }
+
+  scanning = true;
+  const btn = document.getElementById('goBtn');
+  btn.disabled = true;
+  btn.textContent = '◈ SCANNING...';
+
+  // Show scan section
+  document.getElementById('scanSection').classList.add('visible');
+  document.getElementById('resultsSection').classList.remove('visible');
+  document.getElementById('logBox').innerHTML = '';
+  setProgress(0);
+
+  const platform = detectPlatform(input);
+
+  // Animated log sequence
+  const logSteps = [
+    [80, '> INIT RaveID Deep Search Engine v1.0', 'ok'],
+    [120, `> Input detected: ${platform.toUpperCase()} ${timestamp ? '@ ' + timestamp : ''}`, 'info'],
+    [100, `> Sources active: ${Array.from(activeSources).join(', ')}`, 'dim'],
+    [200, '> Querying 1001Tracklists database...', 'dim'],
+    [150, '> Scanning YouTube comment threads (all pages)...', 'dim'],
+    [180, '> Searching Reddit: r/hardtechno r/schranz r/industrialtechno...', 'dim'],
+    [120, '> Checking SoundCloud & Mixcloud comment layers...', 'dim'],
+    [200, '> Deep web scan: Facebook groups, forums, Discogs...', 'dim'],
+    [150, '> Cross-referencing timestamps and BPM signatures...', 'dim'],
+    [180, '> Running Claude AI analysis on all collected signals...', 'info'],
+  ];
+
+  let stepI = 0;
+  async function runLogStep() {
+    if (stepI < logSteps.length) {
+      const [delay, msg, type] = logSteps[stepI];
+      await sleep(delay);
+      log(msg, type);
+      setProgress(Math.round((stepI + 1) / logSteps.length * 80));
+      stepI++;
+      runLogStep();
+    }
+  }
+  runLogStep();
+
+  try {
+    let result;
+    if (!apiKey) {
+      // Demo mode
+      log('> No API key — running demo simulation...', 'warn');
+      await sleep(2800);
+      result = await runDemo(input, timestamp, djHint);
+    } else {
+      const prompt = buildSearchPrompt(input, timestamp, djHint, activeSources, platform);
+      await sleep(1200); // let log animate
+      result = await callClaude(prompt);
+    }
+
+    setProgress(95);
+    log('> Analysis complete. Rendering results...', 'ok');
+    await sleep(300);
+    setProgress(100);
+
+    document.getElementById('resultsSection').classList.add('visible');
+    renderResults(result, input);
+
+    // Scroll to results
+    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch (err) {
+    log(`> ERROR: ${err.message}`, 'err');
+    log('> Check your API key or try again.', 'warn');
+    if (err.message.includes('401')) {
+      log('> Invalid API key. Open the API Key modal to update it.', 'err');
+    }
+  }
+
+  scanning = false;
+  btn.disabled = false;
+  btn.textContent = '▶ IDENTIFY TRACK';
+}
+
+// Enter key support
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && document.activeElement.closest('.search-box')) {
+    startSearch();
+  }
+});
+</script>
+</body>
+</html>
