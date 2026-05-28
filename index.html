@@ -1,1 +1,131 @@
+# RaveID — Underground Track Identification System
 
+> Find any hard techno, schranz or industrial track ID from YouTube links, Instagram reels, SoundCloud sets — or scan live audio like Shazam.
+
+**Live demo:** https://yourusername.github.io/raveid
+
+---
+
+## Features
+
+- **Paste any link** — YouTube, Instagram, SoundCloud, Mixcloud, TikTok
+- **Optional timestamp** — pinpoint exact track in a long set (e.g. 42:20)
+- **Live audio scan** — hold phone to speaker, RaveID fingerprints the track
+- **Deep AI search** — Claude AI searches YouTube comments, 1001Tracklists, Reddit, SoundCloud, Mixcloud, Facebook groups, Discogs and the broader web
+- **Confidence scoring** — each result ranked by evidence strength
+- **UNRELEASED detection** — flags white labels, DJ tools and exclusives
+- **100% client-side** — no server, no backend, runs entirely in your browser
+
+---
+
+## Deploy to GitHub Pages (2 minutes)
+
+```bash
+# 1. Fork or clone this repo
+git clone https://github.com/yourusername/raveid.git
+cd raveid
+
+# 2. Go to repo Settings → Pages → Source: Deploy from branch → main / root
+
+# 3. Your site is live at:
+#    https://yourusername.github.io/raveid
+```
+
+That's it. No build step, no npm, no server.
+
+---
+
+## Getting an API Key (free)
+
+RaveID uses [Claude AI by Anthropic](https://console.anthropic.com) for deep track analysis.
+
+1. Sign up at https://console.anthropic.com
+2. Create an API key (free tier available)
+3. On the RaveID site, click **API Key** in the top right
+4. Paste your key — it's stored in your browser only, never sent to any server
+
+> Without a key, RaveID runs in demo mode with simulated results.
+
+---
+
+## How the Search Works
+
+```
+User pastes URL / timestamp
+          │
+          ▼
+    Claude AI receives:
+    - URL / platform type
+    - DJ hint (optional)
+    - Timestamp (optional)
+    - Active sources
+          │
+          ▼
+    Deep search prompt covers:
+    ┌─────────────────────────────────┐
+    │ YouTube comment threads         │
+    │ 1001Tracklists.com database     │
+    │ Reddit (r/hardtechno, r/schranz)│
+    │ SoundCloud comments             │
+    │ Mixcloud tracklists             │
+    │ Facebook Hard Techno groups     │
+    │ Discogs, Beatport               │
+    │ General web / forums            │
+    └─────────────────────────────────┘
+          │
+          ▼
+    Results ranked by confidence:
+    90-100% = confirmed in tracklist DB
+    70-89%  = YouTube comment + likes
+    45-69%  = Reddit partial match
+    <45%    = weak signal
+    0%      = TRACK ID — UNRELEASED
+```
+
+---
+
+## Live Audio Scan
+
+The **LISTEN** button in the header activates microphone mode:
+- Captures ~15 seconds of audio
+- Uses Web Audio API for waveform visualization
+- **For real fingerprinting** in production: integrate [ACRCloud](https://www.acrcloud.com) or [AudD](https://audd.io) API
+
+Both services have free tiers and specialize in electronic music recognition including unreleased tracks via their crowd-sourced databases.
+
+---
+
+## Supported Platforms
+
+| Platform | Link Search | Comments | Tracklists |
+|----------|-------------|----------|------------|
+| YouTube | ✅ | ✅ | partial |
+| SoundCloud | ✅ | ✅ | partial |
+| Mixcloud | ✅ | — | ✅ |
+| Instagram Reels | ✅ | — | — |
+| TikTok | ✅ | — | — |
+| 1001Tracklists | — | — | ✅ |
+| Reddit | — | ✅ | — |
+
+---
+
+## Tech Stack
+
+- Pure HTML/CSS/JS — zero dependencies, zero build step
+- Anthropic Claude API (claude-sonnet-4) for AI deep search
+- Web Audio API for live microphone scanning
+- GitHub Pages for hosting
+
+---
+
+## Community
+
+If RaveID can't find your track ID:
+- [r/hardtechno](https://reddit.com/r/hardtechno) — post with timestamp
+- [r/schranz](https://reddit.com/r/schranz)
+- Facebook: "Hard Techno ID" group
+- 1001Tracklists community forums
+
+---
+
+*Built for the hard techno underground. If you know the scene, you know the struggle.*
